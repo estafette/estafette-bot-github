@@ -39,7 +39,7 @@ func main() {
 	githubapiClient := githubapi.NewClient(credentialsClient)
 	botService := bot.NewService(githubapiClient)
 
-	err := botService.Run(githubEvent, githubEventBody)
+	err := botService.Run(*githubEvent, *githubEventBody)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed running bot")
 	}

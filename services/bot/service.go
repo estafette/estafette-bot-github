@@ -62,7 +62,7 @@ func (s *service) Run(githubEvent, githubEventBody string) (err error) {
 		"integration_installation_repositories":
 
 	default:
-		return fmt.Errorf("Event '%v' not supported", githubEvent)
+		return fmt.Errorf("event '%v' not supported", githubEvent)
 	}
 
 	return nil
