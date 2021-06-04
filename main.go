@@ -6,6 +6,7 @@ import (
 	"github.com/alecthomas/kingpin"
 	"github.com/estafette/estafette-bot-github/clients/credentials"
 	"github.com/estafette/estafette-bot-github/clients/githubapi"
+	"github.com/estafette/estafette-bot-github/services/bot"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/rs/zerolog/log"
 )
@@ -34,14 +35,14 @@ func main() {
 	// init log format from envvar ESTAFETTE_LOG_FORMAT
 	foundation.InitLoggingFromEnv(appgroup, app, version, branch, revision, buildDate)
 
-	credentialsClient := credentials.NewClient()
-	accessToken, err := credentialsClient.GetAccessToken(*credentialsPath)
+	credentialsClient := credentials.NewClient(*credentialsPath)
+	githubapiClient := githubapi.NewClient(credentialsClient)
+	botService := bot.NewService(githubapiClient)
+
+	err := botService.Run(githubEvent, githubEventBody)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("Failed retrieving access token")
+		log.Fatal().Err(err).Msg("Failed running bot")
 	}
 
-	// set build status
-	_ = githubapi.NewClient(accessToken)
-
-	log.Info().Msg("Finished estafette-bot-github...")
+	log.Info().Msg("Finished running bot...")
 }

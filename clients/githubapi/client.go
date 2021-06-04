@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/estafette/estafette-bot-github/clients/credentials"
 	"github.com/rs/zerolog/log"
 	"github.com/sethgrid/pester"
 )
@@ -16,14 +17,14 @@ import (
 type Client interface {
 }
 
-func NewClient(accessToken string) Client {
+func NewClient(credentialsClient credentials.Client) Client {
 	return &client{
-		accessToken: accessToken,
+		credentialsClient: credentialsClient,
 	}
 }
 
 type client struct {
-	accessToken string
+	credentialsClient credentials.Client
 }
 
 func (c *client) callGithubAPI(method, url string, params interface{}, authorizationType, token string) (body []byte, err error) {
