@@ -6,6 +6,7 @@ type Issue struct {
 	Labels    []Label    `json:"labels"`
 	State     string     `json:"state"`
 	Locked    bool       `json:"locked"`
+	User      *Account   `json:"user"`
 	Assignee  *Account   `json:"assignee"`
 	Assignees []Account  `json:"assignees"`
 	Milestone *Milestone `json:"milestone"`

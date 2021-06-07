@@ -42,10 +42,13 @@ func (s *service) Run(ctx context.Context, githubEvent, githubDelivery, githubPa
 			if issuesEvent.Issue == nil {
 				return fmt.Errorf("expected issue not to be nil for action '%v' for event '%v'", issuesEvent.Action, githubEvent)
 			}
+			if issuesEvent.Issue.User == nil {
+				return fmt.Errorf("expected issue user not to be nil for action '%v' for event '%v'", issuesEvent.Action, githubEvent)
+			}
 
 			// create welcome message in issue
 			err = s.githubapiClient.AddCommentToIssue(ctx, *issuesEvent.Issue, domain.Comment{
-				Body: "Thanks for raising an issue, we'll take a look at it soon",
+				Body: fmt.Sprintf("@%v: Thanks for raising this issue, someone will take a look at it soon.", issuesEvent.Issue.User.Login),
 			})
 			if err != nil {
 				return

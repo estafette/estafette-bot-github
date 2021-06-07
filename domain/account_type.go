@@ -7,4 +7,5 @@ const (
 	AccountTypeUser         AccountType = "user"
 	AccountTypeOrganization AccountType = "organization"
 	AccountTypeEnterprise   AccountType = "enterprise"
+	AccountTypeBot          AccountType = "bot"
 )
