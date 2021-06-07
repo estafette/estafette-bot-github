@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"runtime"
 
 	"github.com/alecthomas/kingpin"
@@ -23,7 +24,8 @@ var (
 
 var (
 	githubEvent     = kingpin.Flag("github-event", "Event that triggered this bot.").Envar("ESTAFETTE_TRIGGER_GITHUB_EVENT").String()
-	githubEventBody = kingpin.Flag("github-event-body", "Event body that triggered this bot.").Envar("ESTAFETTE_TRIGGER_GITHUB_EVENT_BODY").String()
+	githubDelivery  = kingpin.Flag("github-event-body", "Event body that triggered this bot.").Envar("ESTAFETTE_TRIGGER_GITHUB_DELIVERY").String()
+	githubPayload   = kingpin.Flag("github-event-body", "Event body that triggered this bot.").Envar("ESTAFETTE_TRIGGER_GITHUB_PAYLOAD").String()
 	credentialsPath = kingpin.Flag("credentials-path", "Path to file with Github api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/github_api_token.json").String()
 )
 
@@ -35,11 +37,14 @@ func main() {
 	// init log format from envvar ESTAFETTE_LOG_FORMAT
 	foundation.InitLoggingFromEnv(appgroup, app, version, branch, revision, buildDate)
 
+	// create context to cancel commands on sigterm
+	ctx := foundation.InitCancellationContext(context.Background())
+
 	credentialsClient := credentials.NewClient(*credentialsPath)
 	githubapiClient := githubapi.NewClient(credentialsClient)
 	botService := bot.NewService(githubapiClient)
 
-	err := botService.Run(*githubEvent, *githubEventBody)
+	err := botService.Run(ctx, *githubEvent, *githubPayload)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed running bot")
 	}

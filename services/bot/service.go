@@ -1,14 +1,17 @@
 package bot
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/estafette/estafette-bot-github/clients/githubapi"
+	"github.com/estafette/estafette-bot-github/domain"
 	"github.com/rs/zerolog/log"
 )
 
 type Service interface {
-	Run(githubEvent, githubEventBody string) (err error)
+	Run(ctx context.Context, githubEvent, githubEventBody string) (err error)
 }
 
 func NewService(githubapiClient githubapi.Client) Service {
@@ -21,11 +24,37 @@ type service struct {
 	githubapiClient githubapi.Client
 }
 
-func (s *service) Run(githubEvent, githubEventBody string) (err error) {
+func (s *service) Run(ctx context.Context, githubEvent, githubPayload string) (err error) {
 
 	log.Info().Msgf("Running bot for event '%v'...", githubEvent)
 
 	switch githubEvent {
+	case "issues":
+
+		var issuesEvent domain.IssuesEvent
+		err = json.Unmarshal([]byte(githubPayload), &issuesEvent)
+		if err != nil {
+			return
+		}
+
+		switch issuesEvent.Action {
+		case domain.IssuesEventActionOpened:
+			if issuesEvent.Issue == nil {
+				return fmt.Errorf("expected issue not to be nil for action '%v' for event '%v'", issuesEvent.Action, githubEvent)
+			}
+
+			// create welcome message in issue
+			err = s.githubapiClient.AddCommentToIssue(ctx, *issuesEvent.Issue, domain.Comment{
+				Body: "Thanks for raising an issue, we'll take a look at it soon",
+			})
+			if err != nil {
+				return
+			}
+
+		default:
+			return fmt.Errorf("action '%v' for event '%v' not supported", issuesEvent.Action, githubEvent)
+		}
+
 	case "commit_comment",
 		"create",
 		"delete",
@@ -36,7 +65,6 @@ func (s *service) Run(githubEvent, githubEventBody string) (err error) {
 		"installation",
 		"installation_repositories",
 		"issue_comment",
-		"issues",
 		"label",
 		"marketplace_purchase",
 		"member",

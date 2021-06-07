@@ -2,6 +2,7 @@ package githubapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,12 +10,14 @@ import (
 	"net/http"
 
 	"github.com/estafette/estafette-bot-github/clients/credentials"
+	"github.com/estafette/estafette-bot-github/domain"
 	"github.com/rs/zerolog/log"
 	"github.com/sethgrid/pester"
 )
 
 // githubapi.Client allows to communicate with the Github api
 type Client interface {
+	AddCommentToIssue(ctx context.Context, issue domain.Issue, comment domain.Comment) (err error)
 }
 
 func NewClient(credentialsClient credentials.Client) Client {
@@ -27,7 +30,18 @@ type client struct {
 	credentialsClient credentials.Client
 }
 
-func (c *client) callGithubAPI(method, url string, params interface{}, authorizationType, token string) (body []byte, err error) {
+func (c *client) AddCommentToIssue(ctx context.Context, issue domain.Issue, comment domain.Comment) (err error) {
+
+	// https://docs.github.com/en/rest/reference/issues#create-an-issue-comment
+	_, err = c.callGithubAPI("POST", issue.CommentsURL, comment)
+	if err != nil {
+		return
+	}
+
+	return nil
+}
+
+func (c *client) callGithubAPI(method, url string, params interface{}) (body []byte, err error) {
 
 	// convert params to json if they're present
 	var requestBody io.Reader
@@ -50,8 +64,13 @@ func (c *client) callGithubAPI(method, url string, params interface{}, authoriza
 	}
 
 	// add headers
-	request.Header.Add("Authorization", fmt.Sprintf("%v %v", authorizationType, token))
-	request.Header.Add("Accept", "application/vnd.github.machine-man-preview+json")
+	accessToken, err := c.credentialsClient.GetAccessToken()
+	if err != nil {
+		return
+	}
+
+	request.Header.Add("Authorization", fmt.Sprintf("token %v", accessToken))
+	request.Header.Add("Accept", "application/vnd.github.v3+json")
 
 	// perform actual request
 	response, err := client.Do(request)
