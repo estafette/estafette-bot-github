@@ -24,8 +24,8 @@ var (
 
 var (
 	githubEvent     = kingpin.Flag("github-event", "Event that triggered this bot.").Envar("ESTAFETTE_TRIGGER_GITHUB_EVENT").String()
-	githubDelivery  = kingpin.Flag("github-event-body", "Event body that triggered this bot.").Envar("ESTAFETTE_TRIGGER_GITHUB_DELIVERY").String()
-	githubPayload   = kingpin.Flag("github-event-body", "Event body that triggered this bot.").Envar("ESTAFETTE_TRIGGER_GITHUB_PAYLOAD").String()
+	githubDelivery  = kingpin.Flag("github-event-delivery", "Event devliery id that triggered this bot.").Envar("ESTAFETTE_TRIGGER_GITHUB_DELIVERY").String()
+	githubPayload   = kingpin.Flag("github-event-payload", "Event payload that triggered this bot.").Envar("ESTAFETTE_TRIGGER_GITHUB_PAYLOAD").String()
 	credentialsPath = kingpin.Flag("credentials-path", "Path to file with Github api token credentials configured at the CI server, passed in to this trusted extension.").Default("/credentials/github_api_token.json").String()
 )
 
@@ -44,7 +44,7 @@ func main() {
 	githubapiClient := githubapi.NewClient(credentialsClient)
 	botService := bot.NewService(githubapiClient)
 
-	err := botService.Run(ctx, *githubEvent, *githubPayload)
+	err := botService.Run(ctx, *githubEvent, *githubDelivery, *githubPayload)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed running bot")
 	}

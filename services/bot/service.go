@@ -11,7 +11,7 @@ import (
 )
 
 type Service interface {
-	Run(ctx context.Context, githubEvent, githubEventBody string) (err error)
+	Run(ctx context.Context, githubEvent, githubDelivery, githubEventBody string) (err error)
 }
 
 func NewService(githubapiClient githubapi.Client) Service {
@@ -24,7 +24,7 @@ type service struct {
 	githubapiClient githubapi.Client
 }
 
-func (s *service) Run(ctx context.Context, githubEvent, githubPayload string) (err error) {
+func (s *service) Run(ctx context.Context, githubEvent, githubDelivery, githubPayload string) (err error) {
 
 	log.Info().Msgf("Running bot for event '%v'...", githubEvent)
 
